@@ -18,14 +18,15 @@ import maya.cmds as cmds
 
 
 # setup
-filePath = "../sourceimages/characters/nefron_baby_face.png"
+filePath = "../../sourceimages/characters/bb_face_basecolor.psd"
 materialName = "M_Baby_Eye"
 attribName = "Eye"
-jointName = "bone"
+jointName = "baby_Eyes_JNT"
 columns = 5
 lines = 10
+objName = "baby_GEO"
 
-# get current selection
+# get current selection - selection is face
 obj = cmds.ls(selection=True)[0]
 
 # create material
@@ -51,6 +52,7 @@ for elem in connect:
 	cmds.connectAttr(place2d+"."+elem, file+"."+elem, force=True)
 cmds.connectAttr(place2d+".outUV", file+".uv", force=True)
 cmds.connectAttr(place2d+".outUvFilterSize", file+".uvFilterSize", force=True)
+cmds.connectAttr(file+".outTransparency", material+".transparency", force=True);
 
 # connect file to material
 cmds.connectAttr(file+".outColor", material+".color", force=True)
@@ -59,8 +61,8 @@ cmds.connectAttr(file+".outColor", material+".color", force=True)
 maya.mel.eval('assignCreatedShader "lambert" "" '+material+' "'+obj+'"')
 
 # create attribute
-cmds.addAttr( longName=attribName, attributeType='long', min=0, defaultValue=0 )
-cmds.setAttr(obj+'.'+attribName, keyable=True, lock=False)
+cmds.addAttr(objName, longName=attribName, attributeType='long', min=0, defaultValue=0 )
+cmds.setAttr(objName+'.'+attribName, keyable=True, lock=False)
 
 # create math utilities
 calcSize = cmds.shadingNode('multiplyDivide', asUtility=True, n="CalculateSize")
@@ -76,12 +78,12 @@ cmds.connectAttr(calcSize+".outputY", calcOffset+".input1Y", force=True)
 cmds.setAttr( calcOffset+".operation", 1 ) #multiply
 
 # expression convert index to column and line
-cmds.expression( s=calcOffset+".input2X = floor("+obj+"."+attribName+"%"+str(columns)+")", o=obj, name="calculateColumn")
-cmds.expression( s=calcOffset+".input2Y = floor("+obj+"."+attribName+"/"+str(columns)+")", o=obj, name="calculateLine")
+cmds.expression( s=calcOffset+".input2X = floor("+objName+"."+attribName+"%"+str(columns)+")", o=objName, name="calculateColumn")
+cmds.expression( s=calcOffset+".input2Y = floor("+objName+"."+attribName+"/"+str(columns)+")", o=objName, name="calculateLine")
 
 # apply utilities result in place2D
 cmds.connectAttr(calcOffset+".outputX", place2d+".offsetU", force=True)
 cmds.connectAttr(calcOffset+".outputY", place2d+".offsetV", force=True)
 
 # apply attrib value in skelleton 
-cmds.connectAttr(obj+'.'+attribName, jointName+".scaleX")
+cmds.connectAttr(objName+'.'+attribName, jointName+".scaleX")
